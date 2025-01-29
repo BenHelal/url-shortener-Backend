@@ -4,12 +4,8 @@ const urlSchema = new mongoose.Schema({
   shortId: { type: String, required: true, unique: true },
   originalUrl: { type: String, required: true },
   hits: { type: Number, default: 0 },
-  expiresAt: {
-    type: Date,
-    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    index: { expires: 0 } // TTL index
-  }
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date }, // Optional expiration
 });
 
-const Url = mongoose.model('Url', urlSchema);
-export default Url;
+export default mongoose.model('Url', urlSchema);

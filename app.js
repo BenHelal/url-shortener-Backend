@@ -1,26 +1,28 @@
 import express from 'express';
-import rateLimit from 'express-rate-limit';
-import { redirectUrl } from './controllers/redirectController';
-import { getAnalytics } from './controllers/analyticsController';
-import logger from './config/logger';
+import connectDB from './config/db.js';
+import urlRoutes from './routes/urlRoutes.js';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const app = express();
 
-// Rate Limiting Middleware
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests, please try again later.',
-});
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-app.use('/shorten', apiLimiter); // Apply rate limiting on the shorten route
+// Database connection
+connectDB();
 
 // Routes
-app.get('/:shortId', redirectUrl);
-app.get('/analytics/:shortId', getAnalytics);
+app.use('/', urlRoutes);
 
-app.listen(3000, () => {
-  logger.info('Server running on port 3000');
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
 });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => 
+  console.log(`Server running on port ${PORT}`));
