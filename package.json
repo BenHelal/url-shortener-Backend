@@ -1,19 +1,25 @@
 {
   "name": "simplify",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "- **Rate Limiting**: 100 requests/15 minutes for URL shortening - **Caching**: Frequently accessed URLs stored in Redis for 1 hour - **Auto-Expiration**: URLs automatically deleted after 30 days - **Analytics**: Check usage stats at `GET /analytics/:shortId`",
   "dependencies": {
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "ioredis": "^5.4.2",
     "mongoose": "^8.9.5",
-    "valid-url": "^1.0.9"
-  }
+    "valid-url": "^1.0.9",
+    "winston": "^3.17.0"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {}
 }
