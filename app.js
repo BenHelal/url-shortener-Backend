@@ -90,7 +90,7 @@ app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     version: process.env.npm_package_version,
-    environment: process.env.NODE_ENV,
+    environment: 'prod',
   });
 });
 
