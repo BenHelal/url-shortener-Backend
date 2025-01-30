@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { createClient } from 'redis'; // Correct import for createClient
+import { createClient } from 'redis'; // Correct import
 import dotenv from 'dotenv';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -16,19 +16,31 @@ const app = express();
 // Trust proxy (fix X-Forwarded-For issue)
 app.set('trust proxy', 1);
 
+// Define Port
+const port = process.env.PORT || 5000;
+
 // Configure Redis
 const redis = createClient({
     username: 'default',
     password: process.env.REDIS_PASSWORD,
     socket: {
         host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT || 6379,  // Added default port in case it’s missing from ENV
+        port: process.env.REDIS_PORT || 6379, // Default port if missing
     },
 });
 
 redis.on('error', (err) => {
   console.error('Redis Client Error', err);
 });
+
+(async () => {
+  try {
+    await redis.connect();
+    console.log('Connected to Redis');
+  } catch (error) {
+    console.error('Failed to connect to Redis:', error);
+  }
+})();
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -49,24 +61,20 @@ const logger = winston.createLogger({
 // Database connection
 async function connectToDatabase() {
   try {
-    await // Database connection
-    mongoose.connect(process.env.MONGO_URI)
-      .then(() => console.log('Connected to MongoDB'))
-      .catch(err => console.error('MongoDB connection error:', err));
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('Connected to MongoDB');
     logger.info('Connected to MongoDB');
   } catch (err) {
     logger.error('Database connection error:', err);
+    console.error('MongoDB connection error:', err);
     process.exit(1);
   }
 }
 
 connectToDatabase();
-
-
-// Start server
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
 
 // Middleware
 app.use(cors());
@@ -74,19 +82,18 @@ app.use(express.json());
 
 // Rate limiting for API endpoints
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    keyGenerator: (req) => {
-      return req.ip; // Use client IP even behind proxy
-    },
-    handler: (req, res) => {
-      logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
-      res.status(429).json({
-        error: 'Too many requests, please try again later.',
-      });
-    },
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  keyGenerator: (req) => req.ip, // Use client IP even behind proxy
+  handler: (req, res) => {
+    logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Too many requests, please try again later.',
+    });
+  },
 });
-// Routes (assuming urlRoutes is already defined)
+
+// Routes
 app.use('/api', apiLimiter);
 app.use('/api', urlRoutes);
 
@@ -94,8 +101,8 @@ app.use('/api', urlRoutes);
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    version: process.env.npm_package_version,
-    environment: 'prod',
+    version: process.env.APP_VERSION || '1.0.0',
+    environment: process.env.NODE_ENV || 'production',
   });
 });
 
@@ -107,12 +114,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   logger.error(`Unhandled Rejection: ${err.message}`);
+  console.error('Unhandled Rejection:', err);
   process.exit(1);
 });
 
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+// Export necessary modules
 export { app, redis };
