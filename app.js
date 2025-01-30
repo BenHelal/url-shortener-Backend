@@ -49,12 +49,10 @@ const logger = winston.createLogger({
 // Database connection
 async function connectToDatabase() {
   try {
-    await mongoose.connect(process.env.MONGO_URI)
-      .then(() => logger.info('Connected to MongoDB'))
-      .catch(err => {
-        logger.error('MongoDB connection error:', err);
-        process.exit(1);
-      });
+    await // Database connection
+    mongoose.connect(process.env.MONGO_URI)
+      .then(() => console.log('Connected to MongoDB'))
+      .catch(err => console.error('MongoDB connection error:', err));
     logger.info('Connected to MongoDB');
   } catch (err) {
     logger.error('Database connection error:', err);
@@ -63,6 +61,12 @@ async function connectToDatabase() {
 }
 
 connectToDatabase();
+
+
+// Start server
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
 
 // Middleware
 app.use(cors());
@@ -82,7 +86,6 @@ const apiLimiter = rateLimit({
       });
     },
 });
-
 // Routes (assuming urlRoutes is already defined)
 app.use('/api', apiLimiter);
 app.use('/api', urlRoutes);
@@ -104,17 +107,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Server setup const 
 
-port = process.env.PORT || 10000;
-// Security middleware
-app.use(helmet());
-app.use(express.json({ limit: '10kb' })); // Body size limit
-
-// Start server
-app.listen(port, () => {
-  logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${port}`);
-});
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
