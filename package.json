@@ -1,1 +1,28 @@
-{"type":"module","name":"simplify","version":"1.0.0","main":"app.js","scripts":{"start":"node index.js","test":"echo \"Error: no test specified\" && exit 1"},"keywords":[],"author":"","license":"ISC","description":"- **Rate Limiting**: 100 requests/15 minutes for URL shortening - **Caching**: Frequently accessed URLs stored in Redis for 1 hour - **Auto-Expiration**: URLs automatically deleted after 30 days - **Analytics**: Check usage stats at `GET /analytics/:shortId`","dependencies":{"cors":"^2.8.5","dotenv":"^16.4.7","express":"^4.21.2","express-rate-limit":"^7.5.0","redis":"^5.4.2","mongoose":"^8.9.5","valid-url":"^1.0.9","validator":"^13.12.0","winston":"^3.17.0"},"directories":{"test":"test"}}
+{
+  "type": "module",
+  "name": "simplify",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "- **Rate Limiting**: 100 requests/15 minutes for URL shortening - **Caching**: Frequently accessed URLs stored in Redis for 1 hour - **Auto-Expiration**: URLs automatically deleted after 30 days - **Analytics**: Check usage stats at `GET /analytics/:shortId`",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0", 
+    "redis": "^4.6.7", 
+    "mongoose": "^8.9.5",
+    "valid-url": "^1.0.9",
+    "validator": "^13.12.0",
+    "winston": "^3.17.0"
+  },
+  "directories": {
+    "test": "test"
+  }
+}
