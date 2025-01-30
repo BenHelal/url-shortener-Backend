@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Redis from 'ioredis';
+import Redis from 'redis';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
