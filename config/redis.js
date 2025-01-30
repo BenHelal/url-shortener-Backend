@@ -1,15 +1,17 @@
 import { createClient } from 'redis';
 
+// Configure Redis
 const redis = createClient({
-  url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`,
-  password: process.env.REDIS_PASSWORD,
-  socket: {
-    connectTimeout: 10000, // 10 seconds timeout
-  },
+    username: 'default',
+    password: process.env.REDIS_PASSWORD,
+    socket: {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT || 6379,  // Added default port in case it’s missing from ENV
+    },
 });
 
 redis.on('error', (err) => {
-  console.error('Redis connection error:', err);
+  console.error('Redis Client Error', err);
 });
 
 await redis.connect();
