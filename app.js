@@ -50,8 +50,8 @@ const logger = winston.createLogger({
 async function connectToDatabase() {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
     });
     logger.info('Connected to MongoDB');
   } catch (err) {
