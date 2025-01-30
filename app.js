@@ -83,7 +83,7 @@ const apiLimiter = rateLimit({
 
 // Routes (assuming urlRoutes is already defined)
 app.use('/api', apiLimiter);
-app.use('/', urlRoutes);
+app.use('/api', urlRoutes);
 
 // Health check endpoint
 app.get('/', (req, res) => {
