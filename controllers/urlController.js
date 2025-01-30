@@ -18,7 +18,7 @@ export const shortenUrl = async (req, res) => {
         } while (await Url.exists({ shortId }));
 
         const url = await Url.create({ shortId, originalUrl: longUrl });
-        const shortUrl = `${process.env.BASE_URL}/${shortId}`;
+        const shortUrl = `${process.env.BASE_URL}/api/${shortId}`;
 
         res.status(201).json({ shortUrl });
     } catch (error) {
