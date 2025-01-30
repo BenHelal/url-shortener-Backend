@@ -1,10 +1,11 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Redis from 'redis';
+import { createClient } from 'redis'; // Correct import for createClient
 import dotenv from 'dotenv';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
+import urlRoutes from './routes/urlRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -16,16 +17,18 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Configure Redis
-
 const redis = createClient({
     username: 'default',
     password: process.env.REDIS_PASSWORD,
     socket: {
         host: process.env.REDIS_HOST,
-        port: 10776
-    }
+        port: process.env.REDIS_PORT || 6379,  // Added default port in case it’s missing from ENV
+    },
 });
 
+redis.on('error', (err) => {
+  console.error('Redis Client Error', err);
+});
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -43,9 +46,20 @@ const logger = winston.createLogger({
   ],
 });
 
-
-
 // Database connection
+async function connectToDatabase() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    logger.info('Connected to MongoDB');
+  } catch (err) {
+    logger.error('Database connection error:', err);
+    process.exit(1);
+  }
+}
+
 connectToDatabase();
 
 // Middleware
@@ -60,14 +74,14 @@ const apiLimiter = rateLimit({
       return req.ip; // Use client IP even behind proxy
     },
     handler: (req, res) => {
-    logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
-    res.status(429).json({
-      error: 'Too many requests, please try again later.',
-    });
-  },
+      logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
+      res.status(429).json({
+        error: 'Too many requests, please try again later.',
+      });
+    },
 });
 
-// Routes
+// Routes (assuming urlRoutes is already defined)
 app.use('/api', apiLimiter);
 app.use('/api', urlRoutes);
 
