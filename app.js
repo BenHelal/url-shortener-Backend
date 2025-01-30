@@ -16,11 +16,14 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Configure Redis
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD,
-  connectTimeout: 10000,
+
+const redis = createClient({
+    username: 'default',
+    password: process.env.REDIS_PASSWORD,
+    socket: {
+        host: process.env.REDIS_HOST,
+        port: 10776
+    }
 });
 
 
