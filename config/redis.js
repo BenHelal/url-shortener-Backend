@@ -1,17 +1,14 @@
-import Redis from 'ioredis';
+import { createClient } from 'redis';
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
-  retryStrategy: (times) => {
-    return Math.min(times * 100, 3000); // Retry with backoff
-  },
-  connectTimeout: 10000, // 10-second timeout
+const client = createClient({
+    username: 'default',
+    password: process.env.REDIS_PASSWORD,
+    socket: {
+        host: process.env.REDIS_HOST,
+        port: 10776
+    }
 });
 
-redis.on('error', (err) => {
-  console.error('Redis error:', err);
-});
+client.on('error', err => console.log('Redis Client Error', err));
 
-export default redis;
+await client.connect();
