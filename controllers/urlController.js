@@ -1,7 +1,7 @@
 import Url from '../models/Url.js';
 import { generateShortId } from '../utils/helpers.js';
 import validator from 'validator';
-import { redis } from '../server.js'; // Ensure redis is imported properly
+import { redis } from '../app.js'; // Ensure redis is imported properly
 
 // POST /shorten (Shorten URL)
 export const shortenUrl = async (req, res) => {
