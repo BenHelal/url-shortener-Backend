@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { createClient } from 'redis'; // Correct import
+import { createClient } from 'redis';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -16,31 +16,30 @@ const app = express();
 // Trust proxy (fix X-Forwarded-For issue)
 app.set('trust proxy', 1);
 
-// Define Port
-const port = process.env.PORT || 5000;
-
 // Configure Redis
 const redis = createClient({
-    username: 'default',
-    password: process.env.REDIS_PASSWORD,
-    socket: {
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT || 6379, // Default port if missing
-    },
+  username: 'default',
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT || 6379, // Default port if missing
+  },
 });
 
 redis.on('error', (err) => {
   console.error('Redis Client Error', err);
 });
 
-(async () => {
+const connectRedis = async () => {
   try {
     await redis.connect();
     console.log('Connected to Redis');
   } catch (error) {
     console.error('Failed to connect to Redis:', error);
   }
-})();
+};
+
+connectRedis(); // Call Redis connection function
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -59,7 +58,7 @@ const logger = winston.createLogger({
 });
 
 // Database connection
-async function connectToDatabase() {
+const connectToDatabase = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
@@ -72,9 +71,12 @@ async function connectToDatabase() {
     console.error('MongoDB connection error:', err);
     process.exit(1);
   }
-}
+};
 
-connectToDatabase();
+connectToDatabase().catch((err) => {
+  logger.error('MongoDB initial connection failed:', err);
+  process.exit(1);
+});
 
 // Middleware
 app.use(cors());
@@ -121,9 +123,10 @@ process.on('unhandledRejection', (err) => {
   process.exit(1);
 });
 
-// Start server
+const port = process.env.PORT || 3000; // Use environment variable or default to 3000
+
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
 
 // Export necessary modules
