@@ -5,14 +5,24 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
-import urlRoutes from './routes/urlRoutes.js';
-import { connectToDatabase } from './config/db.js';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Express
 const app = express();
+
+// Trust proxy (fix X-Forwarded-For issue)
+app.set('trust proxy', 1);
+
+// Configure Redis
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: process.env.REDIS_PORT || 6379,
+  password: process.env.REDIS_PASSWORD,
+  connectTimeout: 10000,
+});
+
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -30,10 +40,7 @@ const logger = winston.createLogger({
   ],
 });
 
-// Initialize Redis client
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-redis.on('connect', () => logger.info('Connected to Redis'));
-redis.on('error', (err) => logger.error('Redis error:', err));
+
 
 // Database connection
 connectToDatabase();
@@ -44,9 +51,12 @@ app.use(express.json());
 
 // Rate limiting for API endpoints
 const apiLimiter = rateLimit({
-  windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000,
-  max: process.env.RATE_LIMIT_MAX || 100,
-  handler: (req, res) => {
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    keyGenerator: (req) => {
+      return req.ip; // Use client IP even behind proxy
+    },
+    handler: (req, res) => {
     logger.warn(`Rate limit exceeded for IP: ${req.ip}`);
     res.status(429).json({
       error: 'Too many requests, please try again later.',
