@@ -24,23 +24,59 @@ export const shortenUrl = async (req, res) => {
   }
 };
 
+
+// GET /analytics/:shortId
+export const getAnalytics = async (req, res) => {
+    try {
+      const url = await Url.findOne({ shortId: req.params.shortId })
+        .select('hits createdAt expiresAt')
+        .lean();
+  
+      if (!url) return res.status(404).json({ error: 'URL not found' });
+  
+      res.json({
+        hits: url.hits,
+        created_at: url.createdAt,
+        expires_at: url.expiresAt,
+        days_remaining: Math.ceil(
+          (url.expiresAt - Date.now()) / (1000 * 60 * 60 * 24)
+        )
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
 export const redirectUrl = async (req, res) => {
     const { shortId } = req.params;
   
-  try {
-    const url = await Url.findOneAndUpdate(
-      { shortId },
-      { $inc: { hits: 1 } },
-      { new: true }
-    );
-    
-    if (!url) return res.status(404).json({ error: 'URL not found' });
-    
-    res.redirect(url.originalUrl);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-};
+    try {
+      // Check cache first
+      const cachedUrl = await redis.get(shortId);
+      if (cachedUrl) {
+        await Url.findOneAndUpdate(
+          { shortId },
+          { $inc: { hits: 1 } }
+        );
+        return res.redirect(cachedUrl);
+      }
+  
+      // Database lookup
+      const url = await Url.findOneAndUpdate(
+        { shortId },
+        { $inc: { hits: 1 } }
+      );
+  
+      if (!url) return res.status(404).json({ error: 'URL not found' });
+  
+      // Cache with 1-hour expiration
+      await redis.set(shortId, url.originalUrl, 'EX', 3600);
+      
+      res.redirect(url.originalUrl);
+    } catch (error) {
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+
 
 export const getUrlStats = async (req, res) => {
   try {
